@@ -66,7 +66,7 @@ def analyze(args):
             failed_attempts=cfg["failed_attempts"],
             window_seconds=cfg["window_seconds"],
         )
-    
+
     cfg = rules.get("password_spray", {})
     if cfg.get("enabled"):
         spray = find_password_spray(
@@ -92,13 +92,13 @@ def analyze(args):
         )
         alerts.append({"rule": "SUCCESS_AFTER_FAILURE", **item})
 
-    
     for user, count in spray.items():
         print(f"[ALERT] {count} different IPs targeted user '{user}' - possible password spraying!")
-        alerts.append({"rule": "PASSWORD_SPRAY", "user": user, "count": count}) 
+        alerts.append({"rule": "PASSWORD_SPRAY", "user": user, "count": count})
 
     if not alerts:
         print("No suspicious activity.")
+
     for ip, score in sorted(risk_by_ip(alerts).items(), key=lambda item: -item[1]):
         print(f"RISK: {ip} score {score}/100 -> {severity(score)}")
 
@@ -115,8 +115,8 @@ def analyze(args):
         save_html(alerts, args.html)
         print(f"HTML report saved: {args.html}")
 
-    save_alerts(alerts)
-    print(f"Saved {len(alerts)} alerts to database")
+    new, repeated = save_alerts(alerts)
+    print(f"Database: {new} new alerts, {repeated} repeated (already known)")
 
 
 def history(args):
@@ -125,7 +125,10 @@ def history(args):
         print("No alerts stored yet.")
         return
     for row in rows:
-        print(f"{row['created_at']}  {row['rule']:<22} {row['ip'] or '-'}")
+        print(
+            f"{row['last_seen']}  {row['rule']:<22} "
+            f"{row['ip'] or row['username'] or '-':<16} x{row['occurrences']}"
+        )
 
 
 def main():
