@@ -1,0 +1,11 @@
+Oct 03 19:20:01 server sshd[1]: Failed password for root from 203.0.113.10 port 50001 ssh2
+Oct 03 19:20:10 server sshd[2]: Failed password for root from 203.0.113.10 port 50002 ssh2
+Oct 03 19:20:18 server sshd[3]: Failed password for admin from 203.0.113.10 port 50003 ssh2
+Oct 03 19:20:25 server sshd[4]: Failed password for test from 203.0.113.10 port 50004 ssh2
+Oct 03 19:20:31 server sshd[5]: Failed password for user from 203.0.113.10 port 50005 ssh2
+Oct 03 19:20:37 server sshd[6]: Failed password for guest from 203.0.113.10 port 50006 ssh2
+Oct 03 19:25:00 server sshd[7]: Failed password for bob from 198.51.100.7 port 40000 ssh2
+Oct 03 19:20:44 server sshd[8]: Failed password for root from 203.0.113.10 port 50008 ssh2
+Oct 03 19:21:12 server sshd[9]: Accepted password for root from 203.0.113.10 port 50009 ssh2
+Oct 03 19:30:00 server sshd[10]: Failed password for bob from 198.51.100.7 port 40001 ssh2
+Oct 03 19:30:20 server sshd[11]: Accepted password for bob from 198.51.100.7 port 40002 ssh2
