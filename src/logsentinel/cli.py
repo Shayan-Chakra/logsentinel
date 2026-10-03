@@ -14,6 +14,7 @@ from logsentinel.detect import (
 from logsentinel.reports import save_csv, save_html
 from logsentinel.monitor import monitor
 from logsentinel.database import save_alerts, get_alerts
+from logsentinel.scoring import risk_by_ip, severity
 
 
 def analyze(args):
@@ -98,6 +99,8 @@ def analyze(args):
 
     if not alerts:
         print("No suspicious activity.")
+    for ip, score in sorted(risk_by_ip(alerts).items(), key=lambda item: -item[1]):
+        print(f"RISK: {ip} score {score}/100 -> {severity(score)}")
 
     with open(args.json, "w") as report:
         json.dump(alerts, report, indent=4)
