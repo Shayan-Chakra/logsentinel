@@ -15,6 +15,7 @@ from logsentinel.reports import save_csv, save_html
 from logsentinel.monitor import monitor
 from logsentinel.database import save_alerts, get_alerts
 from logsentinel.scoring import risk_by_ip, severity
+from logsentinel.incidents import build_incidents
 
 
 def analyze(args):
@@ -130,6 +131,18 @@ def history(args):
             f"{row['ip'] or row['username'] or '-':<16} x{row['occurrences']}"
         )
 
+def show_incidents(args):
+    incidents = build_incidents(get_alerts(1000))
+    if not incidents:
+        print("No incidents yet. Run 'logsentry analyze' first.")
+        return
+    for inc in incidents:
+        print(f"[{inc['severity']}] {inc['ip']}  score {inc['risk_score']}/100  {inc['status']}")
+        print(f"    first seen: {inc['first_seen']}")
+        print(f"    last seen:  {inc['last_seen']}")
+        print(f"    rules:      {', '.join(inc['rules'])}")
+        print()
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -151,6 +164,7 @@ def main():
 
     history_parser = subparsers.add_parser("history", help="Show stored alerts")
     history_parser.add_argument("--limit", type=int, default=20, help="How many alerts to show")
+    subparsers.add_parser("incidents", help="Show one case per attacker IP")
 
     args = parser.parse_args()
 
@@ -160,6 +174,8 @@ def main():
         monitor(args.logfile, args.rules)
     elif args.command == "history":
         history(args)
+    elif args.command == "incidents":
+        show_incidents(args)
     else:
         parser.print_help()
 
