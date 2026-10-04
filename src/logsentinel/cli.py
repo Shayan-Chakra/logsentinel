@@ -17,6 +17,7 @@ from logsentinel.monitor import monitor
 from logsentinel.database import save_alerts, get_alerts
 from logsentinel.scoring import risk_by_ip, severity
 from logsentinel.incidents import build_incidents
+from logsentinel.threatintel import load_blocklist, lookup
 
 
 def analyze(args):
@@ -118,6 +119,11 @@ def analyze(args):
 
     for ip, score in sorted(risk_by_ip(alerts).items(), key=lambda item: -item[1]):
         print(f"RISK: {ip} score {score}/100 -> {severity(score)}")
+
+    blocklist = load_blocklist()
+    for ip in sorted(risk_by_ip(alerts)):
+        for note in lookup(ip, blocklist):
+            print(f"THREAT INTEL: {ip} {note}")
 
     with open(args.json, "w") as report:
         json.dump(alerts, report, indent=4)
