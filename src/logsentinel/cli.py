@@ -10,6 +10,7 @@ from logsentinel.detect import (
     find_username_enumeration,
     find_success_after_failure,
     find_password_spray,
+    find_anomalies,
 )
 from logsentinel.reports import save_csv, save_html
 from logsentinel.monitor import monitor
@@ -42,7 +43,7 @@ def analyze(args):
     print(f"Failed logins found: {len(failures)}")
     print(f"Successful logins found: {len(successes)}")
 
-    brute, enum, breakins, spray = {}, {}, [], {}
+    brute, enum, breakins, spray, anomalies = {}, {}, [], {}, []
 
     cfg = rules["brute_force"]
     if cfg["enabled"]:
@@ -76,6 +77,14 @@ def analyze(args):
             window_seconds=cfg["window_seconds"],
         )
 
+    cfg = rules.get("anomaly", {})
+    if cfg.get("enabled"):
+        anomalies = find_anomalies(
+            failures,
+            factor=cfg["factor"],
+            min_failures=cfg["min_failures"],
+        )
+
     alerts = []
 
     for ip, count in brute.items():
@@ -96,6 +105,13 @@ def analyze(args):
     for user, count in spray.items():
         print(f"[ALERT] {count} different IPs targeted user '{user}' - possible password spraying!")
         alerts.append({"rule": "PASSWORD_SPRAY", "user": user, "count": count})
+
+    for item in anomalies:
+        print(
+            f"[ALERT] {item['count']} failures during {item['bucket']} "
+            f"(normal is about {item['baseline']}) - unusual spike!"
+        )
+        alerts.append({"rule": "ANOMALY", "count": item["count"]})
 
     if not alerts:
         print("No suspicious activity.")

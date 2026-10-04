@@ -1,4 +1,5 @@
 from collections import defaultdict, deque
+import statistics
 
 
 def group_by_ip(events):
@@ -93,3 +94,25 @@ def find_password_spray(events, unique_ips=5, window_seconds=300):
                 break
 
     return suspicious
+
+def find_anomalies(events, factor=5, min_failures=20):
+    buckets = defaultdict(int)
+    for event in events:
+        hour = event["time"].replace(minute=0, second=0, microsecond=0)
+        buckets[hour] += 1
+
+    if len(buckets) < 3:  # not enough data to know what "normal" is
+        return []
+
+    baseline = statistics.median(buckets.values())
+    anomalies = []
+
+    for hour, count in sorted(buckets.items()):
+        if count >= min_failures and count >= factor * baseline:
+            anomalies.append({
+                "bucket": hour.strftime("%b %d %H:00"),
+                "count": count,
+                "baseline": baseline,
+            })
+
+    return anomalies

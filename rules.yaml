@@ -21,3 +21,8 @@ password_spray:
   enabled: true
   unique_ips: 5
   window_seconds: 300
+
+anomaly:
+  enabled: true
+  factor: 5
+  min_failures: 20
