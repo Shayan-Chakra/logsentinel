@@ -1,0 +1,2 @@
+# one bad IP per line
+203.0.113.10
