@@ -1,20 +1,30 @@
-from logsentinel.scoring import risk_by_ip, severity
+from logsentinel.scoring import SCORES, severity
+
+
+def incident_key(row):
+    """Who an alert belongs to: an IP address, or 'user:<name>' for password spraying."""
+    if row["ip"]:
+        return row["ip"]
+    # Password spraying hits one account from many addresses, so it has no single IP.
+    if row["rule"] == "PASSWORD_SPRAY" and row.get("username"):
+        return "user:" + row["username"]
+    return None
 
 
 def build_incidents(rows):
-    """Group stored alerts into one incident per IP."""
+    """Group stored alerts into one incident per IP (or per sprayed account)."""
     groups = {}
     for row in rows:
-        if row["ip"]:  # password-spray alerts have no IP, so skip them
-            groups.setdefault(row["ip"], []).append(row)
+        key = incident_key(row)
+        if key:
+            groups.setdefault(key, []).append(row)
 
-    scores = risk_by_ip(rows)
     incidents = []
 
-    for ip, items in groups.items():
-        score = scores.get(ip, 0)
+    for key, items in groups.items():
+        score = min(sum(SCORES.get(r["rule"], 0) for r in items), 100)
         incidents.append({
-            "ip": ip,
+            "ip": key,
             "first_seen": min(r["created_at"] for r in items),
             "last_seen": max(r["last_seen"] for r in items),
             "rules": sorted(r["rule"] for r in items),

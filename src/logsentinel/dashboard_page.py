@@ -531,7 +531,9 @@ function openPanel(spec) {
   if (!d) return;
   const ip = spec.ip || null;
   const inc = ip ? d.incidents.find(x => x.ip === ip) : null;
-  let related = ip ? d.alerts.filter(a => a.ip === ip) : (spec.alert ? [spec.alert] : []);
+  const acct = ip && ip.startsWith("user:") ? ip.slice(5) : null;
+  let related = acct ? d.alerts.filter(a => a.rule === "PASSWORD_SPRAY" && a.username === acct)
+    : ip ? d.alerts.filter(a => a.ip === ip) : (spec.alert ? [spec.alert] : []);
   related = related.slice().sort((a, b) => String(a.last_seen).localeCompare(String(b.last_seen)));
   const subject = ip || (spec.alert && (spec.alert.username || spec.alert.rule)) || "-";
 
@@ -621,6 +623,9 @@ function openPanel(spec) {
     row.appendChild(copyButton("Copy address", ip, "Copied " + ip));
     parts.push(row);
     parts.push(el("div", "This blocks new connections from that address to this PC. LogSentinel never changes your firewall by itself. It only copies the command, and you decide whether to run it.", "fine"));
+  } else if (acct) {
+    parts.push(section("About this account"));
+    parts.push(el("div", "Many different addresses each tried a few passwords on the account '" + acct + "'. That is called password spraying, and it is used to avoid being locked out. There is no single address to block. Check that the account really needs to exist, use a long unique password, and turn on account lockout or two-step sign-in.", "warn"));
   } else if (ip === "LOCAL") {
     parts.push(section("About LOCAL"));
     parts.push(el("div", "LOCAL means the failed logins were made on this PC itself (the sign-in screen, the lock screen, or this PC connecting to itself). There is nothing to block. If it was not you, check who can sit at this PC or reach it by Remote Desktop.", "warn"));
@@ -922,6 +927,7 @@ function heading(title, sub) {
 }
 
 function whoOf(a) { return a.ip || a.username || "-"; }
+function panelKey(a) { return a.ip || (a.rule === "PASSWORD_SPRAY" && a.username ? "user:" + a.username : null); }
 
 function alertTable(rows, sortable) {
   const t = el("table"), thead = el("thead"), hr = el("tr");
@@ -943,8 +949,8 @@ function alertTable(rows, sortable) {
     const tr = el("tr", null, "click");
     tr.tabIndex = 0;
     tr.title = "Click for details";
-    tr.onclick = () => openPanel({ip: a.ip || null, alert: a});
-    tr.onkeydown = (ev) => { if (ev.key === "Enter") { ev.preventDefault(); openPanel({ip: a.ip || null, alert: a}); } };
+    tr.onclick = () => openPanel({ip: panelKey(a), alert: a});
+    tr.onkeydown = (ev) => { if (ev.key === "Enter") { ev.preventDefault(); openPanel({ip: panelKey(a), alert: a}); } };
     tr.appendChild(el("td", a.last_seen));
     const tdRule = el("td"); tdRule.appendChild(el("span", a.rule, "chip")); tr.appendChild(tdRule);
     tr.appendChild(el("td", whoOf(a), "mono"));

@@ -24,8 +24,7 @@ def find_brute_force(events, threshold=5, window_seconds=300):
                 window.popleft()
 
             if len(window) >= threshold:
-                suspicious[ip] = len(window)
-                break
+                suspicious[ip] = max(suspicious.get(ip, 0), len(window))
 
     return suspicious
 def find_username_enumeration(events, unique_users=5, window_seconds=300):
@@ -44,8 +43,7 @@ def find_username_enumeration(events, unique_users=5, window_seconds=300):
             usernames = {e["user"] for e in window}  # a set keeps only unique names
 
             if len(usernames) >= unique_users:
-                suspicious[ip] = len(usernames)
-                break
+                suspicious[ip] = max(suspicious.get(ip, 0), len(usernames))
 
     return suspicious
 def find_success_after_failure(events, failed_attempts=5, window_seconds=300):
@@ -90,8 +88,7 @@ def find_password_spray(events, unique_ips=5, window_seconds=300):
             ips = {e["ip"] for e in window}
 
             if len(ips) >= unique_ips:
-                suspicious[user] = len(ips)
-                break
+                suspicious[user] = max(suspicious.get(user, 0), len(ips))
 
     return suspicious
 

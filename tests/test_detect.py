@@ -52,3 +52,8 @@ def test_same_ip_is_not_password_spray():
         for i in range(5)
     ]
     assert find_password_spray(events, unique_ips=5, window_seconds=300) == {}
+
+
+def test_brute_force_reports_the_biggest_burst_not_the_first():
+    result = find_brute_force(make_failures(50, 2), threshold=5, window_seconds=300)
+    assert result["203.0.113.10"] == 50

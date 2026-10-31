@@ -1,0 +1,18 @@
+[
+    {
+        "rule": "BRUTE_FORCE",
+        "ip": "203.0.113.10",
+        "count": 7
+    },
+    {
+        "rule": "USERNAME_ENUMERATION",
+        "ip": "203.0.113.10",
+        "count": 5
+    },
+    {
+        "rule": "SUCCESS_AFTER_FAILURE",
+        "ip": "203.0.113.10",
+        "user": "root",
+        "failures": 7
+    }
+]

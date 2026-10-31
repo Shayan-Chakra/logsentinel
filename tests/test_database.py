@@ -10,7 +10,19 @@ def test_same_alert_is_not_duplicated(tmp_path):
 
     rows = get_alerts(10, db)
     assert len(rows) == 1
+    # a rescan of the same evidence is NOT a new attack
+    assert rows[0]["occurrences"] == 1
+
+
+def test_bigger_attack_counts_as_new_evidence(tmp_path):
+    db = str(tmp_path / "test.db")
+    save_alerts([{"rule": "BRUTE_FORCE", "ip": "203.0.113.10", "count": 5}], db)
+    save_alerts([{"rule": "BRUTE_FORCE", "ip": "203.0.113.10", "count": 40}], db)
+
+    rows = get_alerts(10, db)
+    assert len(rows) == 1
     assert rows[0]["occurrences"] == 2
+    assert rows[0]["count"] == 40
 
 def test_default_database_lives_in_data_folder(tmp_path, monkeypatch):
     monkeypatch.setenv("LOGSENTINEL_HOME", str(tmp_path))

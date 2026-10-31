@@ -33,15 +33,19 @@ def save_alerts(alerts, path=None):
         user = a.get("user")
 
         row = conn.execute(
-            "SELECT id FROM alerts WHERE rule = ? AND ip IS ? AND username IS ?",
+            "SELECT id, count, failures FROM alerts WHERE rule = ? AND ip IS ? AND username IS ?",
             (a["rule"], ip, user),
         ).fetchone()
 
         if row:
-            conn.execute(
-                "UPDATE alerts SET occurrences = occurrences + 1, last_seen = ? WHERE id = ?",
-                (now, row[0]),
-            )
+            # The same evidence seen again (for example a rescan of the same log) is not
+            # a new attack. Only count it when the numbers changed.
+            if a.get("count") != row[1] or a.get("failures") != row[2]:
+                conn.execute(
+                    "UPDATE alerts SET occurrences = occurrences + 1, last_seen = ?, "
+                    "count = ?, failures = ? WHERE id = ?",
+                    (now, a.get("count"), a.get("failures"), row[0]),
+                )
             repeated += 1
         else:
             conn.execute(
