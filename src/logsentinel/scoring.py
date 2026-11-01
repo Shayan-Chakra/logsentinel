@@ -2,7 +2,7 @@ SCORES = {
     "BRUTE_FORCE": 40,
     "USERNAME_ENUMERATION": 25,
     "SUCCESS_AFTER_FAILURE": 30,
-    "PASSWORD_SPRAY": 30,
+    "PASSWORD_SPRAY": 30,  # nosec B105 - a rule name, not a password
     "SLOW_BRUTE_FORCE": 20,
     "LOG_CLEARED": 60,
     "ACCOUNT_CREATED": 30,

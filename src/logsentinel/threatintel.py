@@ -35,7 +35,7 @@ def check_abuseipdb(ip, api_key):
         url, headers={"Key": api_key, "Accept": "application/json"}
     )
     try:
-        with urllib.request.urlopen(request, timeout=5) as response:
+        with urllib.request.urlopen(request, timeout=5) as response:  # nosec B310 - fixed https URL
             data = json.load(response)["data"]
     except Exception:
         return None  # no internet or bad key: skip quietly

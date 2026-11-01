@@ -35,4 +35,11 @@ def load_rules(path=None):
         loaded = yaml.safe_load(handle)
     if not isinstance(loaded, dict):
         loaded = {}
-    return {**DEFAULT_RULES, **loaded}
+    merged = {}
+    for name, default in DEFAULT_RULES.items():
+        value = loaded.get(name)
+        # A section the user only half filled keeps the defaults for the missing keys.
+        merged[name] = {**default, **value} if isinstance(value, dict) else default
+    for name, value in loaded.items():
+        merged.setdefault(name, value)
+    return merged

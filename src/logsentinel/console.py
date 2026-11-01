@@ -120,7 +120,7 @@ class LogSentryConsole(cmd.Cmd):
 
     def do_clear(self, arg):
         """clear   - clear the screen"""
-        os.system("cls" if os.name == "nt" else "clear")
+        os.system("cls" if os.name == "nt" else "clear")  # nosec B605 - fixed text, no user input
 
     def do_exit(self, arg):
         """exit   - leave the console"""

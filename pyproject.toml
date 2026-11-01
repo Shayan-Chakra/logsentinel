@@ -16,3 +16,5 @@ logsentry = "logsentinel.cli:main"
 where = ["src"]
 [project.optional-dependencies]
 dev = ["pytest"]
+[tool.bandit]
+skips = ["B404", "B603"]

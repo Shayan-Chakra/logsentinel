@@ -1,13 +1,16 @@
 from logsentinel.textsafe import clean_text, MAX_LENGTH
 
+ESC = chr(27)
+RLO = chr(0x202e)  # the "right-to-left override" character, used to fake file names
+
 
 def test_terminal_escape_codes_are_removed():
-    assert "\x1b" not in clean_text("admin\x1b[2J\x1b[31m")
+    assert ESC not in clean_text("admin" + ESC + "[2J" + ESC + "[31m")
 
 
 def test_newlines_and_hidden_direction_marks_are_removed():
-    out = clean_text("ro\not‮txt.exe")
-    assert "\n" not in out and "‮" not in out
+    out = clean_text("ro" + chr(10) + "ot" + RLO + "txt.exe")
+    assert chr(10) not in out and RLO not in out
 
 
 def test_very_long_values_are_cut():

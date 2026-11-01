@@ -4,7 +4,7 @@ from pathlib import Path
 
 from logsentinel.textsafe import clean_text
 
-IGNORED_IPS = {"", "-", "::1", "127.0.0.1", "0.0.0.0"}
+IGNORED_IPS = {"", "-", "::1", "127.0.0.1", "0.0.0.0"}  # nosec B104 - a list of addresses to ignore, not a bind
 
 # Logon types that count as a login from another computer:
 # 3 = network, 8 = network with the password sent in clear text, 10 = Remote Desktop.
