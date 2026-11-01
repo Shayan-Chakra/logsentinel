@@ -1,6 +1,7 @@
 # LogSentinel
 
 ![CI](https://github.com/Shayan-Chakra/logsentinel/actions/workflows/ci.yml/badge.svg)
+
 A small, local security log analyzer. It reads the **Windows Security log** (or SSH logs and CSV exports), spots suspicious login activity, and shows the result in a dashboard that runs only on your own PC.
 
 > Your logs never leave your computer. The only optional exception is the AbuseIPDB lookup, which sends public IP addresses to abuseipdb.com if you set an API key.

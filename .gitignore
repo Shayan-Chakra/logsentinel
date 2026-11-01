@@ -7,3 +7,8 @@ __pycache__/
 *.log
 .env
 Output/
+installer/
+report.json
+report.csv
+report.html
+last_report.json
