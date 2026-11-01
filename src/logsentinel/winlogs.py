@@ -1,4 +1,8 @@
-"""Read Windows event logs (live Security log or a saved .evtx file) through PowerShell."""
+"""Read Windows event logs (live Security log or a saved .evtx file) through PowerShell.
+
+Events read: 4624/4625 (logons), 1102 (log cleared), 4720 (account created),
+4732 (member added to a local group; only the Administrators group is used).
+"""
 import base64
 import json
 import os
@@ -18,7 +22,7 @@ PS_SCRIPT = r"""
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 try {
-    $filter = @{ Id = 4624, 4625 }
+    $filter = @{ Id = 4624, 4625, 1102, 4720, 4732 }
     if ($env:LS_PATH) { $filter['Path'] = $env:LS_PATH } else { $filter['LogName'] = 'Security' }
     if ($env:LS_HOURS) {
         $hours = [double]::Parse($env:LS_HOURS, [Globalization.CultureInfo]::InvariantCulture)
@@ -34,12 +38,19 @@ try {
         $xml = [xml]$e.ToXml()
         $d = @{}
         foreach ($item in $xml.Event.EventData.Data) { $d[$item.Name] = $item.'#text' }
+        $subject = $d['SubjectUserName']
+        if ($e.Id -eq 1102 -and $xml.Event.UserData.LogFileCleared) {
+            $subject = [string]$xml.Event.UserData.LogFileCleared.SubjectUserName
+        }
         [pscustomobject]@{
             Time      = $e.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
             EventId   = $e.Id
             User      = $d['TargetUserName']
             Ip        = $d['IpAddress']
             LogonType = $d['LogonType']
+            Subject   = $subject
+            Target    = $d['TargetUserName']
+            TargetSid = $d['TargetSid']
         }
     }
     if (-not $rows) { Write-Output '[]' } else { Write-Output (ConvertTo-Json -InputObject @($rows) -Compress) }

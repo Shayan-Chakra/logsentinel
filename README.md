@@ -2,7 +2,7 @@
 
 A small, local security log analyzer. It reads the **Windows Security log** (or SSH logs and CSV exports), spots suspicious login activity, and shows the result in a dashboard that runs only on your own PC.
 
-> Nothing is uploaded anywhere. Your logs never leave your computer.The only optional exception is the AbuseIPDB lookup, which sends public IP addresses to abuseipdb.com if you set an API key.
+> Your logs never leave your computer. The only optional exception is the AbuseIPDB lookup, which sends public IP addresses to abuseipdb.com if you set an API key.
 
 ![Dashboard (dark theme)](docs/dashboard-dark.png)
 
@@ -16,15 +16,19 @@ A small, local security log analyzer. It reads the **Windows Security log** (or 
 | `USERNAME_ENUMERATION` | One address tried many different usernames. |
 | `SUCCESS_AFTER_FAILURE` | A login worked right after many failures from the same address (possible break-in). |
 | `PASSWORD_SPRAY` | Many addresses tried the same account. |
+| `SLOW_BRUTE_FORCE` | Many wrong passwords from one address spread over up to an hour, to stay under the fast-attack alarm. |
 | `ANOMALY` | A sudden spike in failed logins compared with the normal hourly level. |
+| `ADMIN_ADDED` | An account was added to the Administrators group (event 4732). |
+| `LOG_CLEARED` | The Security log was cleared (event 1102), a common way to hide tracks. |
+| `ACCOUNT_CREATED` | A new user account was created (event 4720). |
 
-Alerts for the same address are grouped into an **incident** with a risk score from 0 to 100.
+Alerts for the same address are grouped into an **incident** with a risk score from 0 to 100. Rules about an account rather than an address (password spraying, log cleared, new account, admin added) become an incident named `user:<account>`.
 
 These are threshold-based checks, not proof of an attack. Treat them as leads to investigate. Tune the thresholds in `rules.yaml` for your own environment.
 
 ## Features
 
-- Reads the live Windows Security log (events 4625 and 4624). It asks for administrator rights when needed.
+- Reads the live Windows Security log (events 4625, 4624, 1102, 4720 and 4732). It asks for administrator rights when needed.
 - Also reads SSH `auth.log` files, Windows CSV exports and `.evtx` files.
 - Local dashboard with a threat level, incidents, charts, search and a plain-language **Help** panel.
 - Dark and light themes, and a time range picker (last hour up to 7 days).
@@ -107,6 +111,8 @@ Edit `rules.yaml` to change the thresholds and the allowlist. If you override a 
 - Live Windows scanning needs administrator rights and PowerShell.
 - `monitor` follows SSH logs only and checks fewer rules than `analyze`.
 - SSH log lines have no year, so the current year is assumed.
+- New-account and admin-group events only appear if Windows auditing for user account and group management is on (it is by default on most editions).
+- Windows account names are compared without regard to upper or lower case, so they are shown in lowercase.
 - Local failed logins (sign-in screen, lock screen) are shown as `LOCAL`. They are not outside addresses.
 
 ## Project layout

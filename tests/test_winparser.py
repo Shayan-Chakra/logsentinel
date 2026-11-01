@@ -24,3 +24,30 @@ def test_attacker_chosen_username_is_cleaned():
     event = rows_to_events([row(User="admin\x1b[2J" + "x" * 500)])[0]
     assert "\x1b" not in event["user"]
     assert len(event["user"]) <= 100
+
+
+def test_usernames_are_not_case_sensitive():
+    events = rows_to_events([row(User="Administrator"), row(User="ADMINISTRATOR")])
+    assert {e["user"] for e in events} == {"administrator"}
+
+
+def test_network_cleartext_logon_counts_as_success():
+    assert rows_to_events([row(EventId="4624", LogonType="8")])[0]["type"] == "SUCCESS"
+
+
+def test_log_cleared_event():
+    event = rows_to_events([row(EventId="1102", User="", Ip="", Subject="Mallory")])[0]
+    assert event["type"] == "LOG_CLEARED" and event["user"] == "mallory"
+
+
+def test_account_created_event_uses_the_new_account_name():
+    event = rows_to_events([row(EventId="4720", User="Backdoor", Subject="Mallory", Ip="")])[0]
+    assert event["type"] == "ACCOUNT_CREATED" and event["user"] == "backdoor"
+
+
+def test_admin_added_only_for_the_administrators_group():
+    admin = row(EventId="4732", User="Administratoren", Target="Administratoren", TargetSid="S-1-5-32-544", Subject="Mallory", Ip="")
+    other = row(EventId="4732", User="Users", Target="Users", TargetSid="S-1-5-32-545", Subject="Mallory", Ip="")
+    events = rows_to_events([admin, other])
+    assert [e["type"] for e in events] == ["ADMIN_ADDED"]
+    assert events[0]["user"] == "mallory"

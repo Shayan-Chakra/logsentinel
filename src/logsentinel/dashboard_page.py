@@ -456,6 +456,26 @@ const RULES = {
     what: "Many different addresses tried to log in to the same account. This is a slower, spread-out way of guessing passwords that avoids simple blocking.",
     todo: ["Change the password of the targeted account to a long, unique one.", "Turn on two-step verification where you can.", "Block the addresses involved."],
   },
+  SLOW_BRUTE_FORCE: {
+    title: "Slow password guessing",
+    what: "One address got many passwords wrong, but spread over a long time (up to an hour) to stay under the radar. Attackers do this to avoid the fast-attack alarm.",
+    todo: ["Block the address (see below).", "Make sure the accounts being attacked have long, unique passwords.", "Turn on account lockout in Windows if you can."],
+  },
+  LOG_CLEARED: {
+    title: "Security log was cleared",
+    what: "Someone emptied the Windows Security log. Attackers do this after getting in, to hide what they did. The account shown is the one that cleared it.",
+    todo: ["Find out if this was you or an administrator you trust. If not, treat this PC as compromised.", "Change the passwords of administrator accounts from a different, trusted device.", "Check for new accounts and new programs that start with Windows."],
+  },
+  ACCOUNT_CREATED: {
+    title: "New user account created",
+    what: "A new user account was created on this PC. Attackers add accounts so they can come back later. The account shown is the new one.",
+    todo: ["Check that you or your administrator created it. If not, disable it now (Settings, Accounts).", "Look at what else changed around the same time (Alerts tab)."],
+  },
+  ADMIN_ADDED: {
+    title: "Someone became an administrator",
+    what: "An account was added to the Administrators group. That gives full control of this PC. The account shown is the one that made the change.",
+    todo: ["Open Computer Management, then Local Users and Groups, then Groups, then Administrators, and check every member.", "Remove anyone you do not recognise, then change the passwords of the real administrators."],
+  },
   ANOMALY: {
     title: "Unusual spike",
     what: "There were far more failed logins than normal during one period.",
@@ -467,6 +487,7 @@ function ruleInfo(name) {
   return RULES[name] || {title: name, what: "This rule flagged unusual login activity.", todo: ["Check the Windows Security log around these times."]};
 }
 
+const ACCT_RULES = ["PASSWORD_SPRAY", "LOG_CLEARED", "ACCOUNT_CREATED", "ADMIN_ADDED"];
 const IP4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
 const IP6 = /^[0-9a-fA-F:.]{2,45}$/;
 
@@ -532,7 +553,7 @@ function openPanel(spec) {
   const ip = spec.ip || null;
   const inc = ip ? d.incidents.find(x => x.ip === ip) : null;
   const acct = ip && ip.startsWith("user:") ? ip.slice(5) : null;
-  let related = acct ? d.alerts.filter(a => a.rule === "PASSWORD_SPRAY" && a.username === acct)
+  let related = acct ? d.alerts.filter(a => !a.ip && ACCT_RULES.includes(a.rule) && a.username === acct)
     : ip ? d.alerts.filter(a => a.ip === ip) : (spec.alert ? [spec.alert] : []);
   related = related.slice().sort((a, b) => String(a.last_seen).localeCompare(String(b.last_seen)));
   const subject = ip || (spec.alert && (spec.alert.username || spec.alert.rule)) || "-";
@@ -625,7 +646,7 @@ function openPanel(spec) {
     parts.push(el("div", "This blocks new connections from that address to this PC. LogSentinel never changes your firewall by itself. It only copies the command, and you decide whether to run it.", "fine"));
   } else if (acct) {
     parts.push(section("About this account"));
-    parts.push(el("div", "Many different addresses each tried a few passwords on the account '" + acct + "'. That is called password spraying, and it is used to avoid being locked out. There is no single address to block. Check that the account really needs to exist, use a long unique password, and turn on account lockout or two-step sign-in.", "warn"));
+    parts.push(el("div", "This case is about the account '" + acct + "', not a network address, so there is nothing to block. The alerts above say what happened and what to do.", "warn"));
   } else if (ip === "LOCAL") {
     parts.push(section("About LOCAL"));
     parts.push(el("div", "LOCAL means the failed logins were made on this PC itself (the sign-in screen, the lock screen, or this PC connecting to itself). There is nothing to block. If it was not you, check who can sit at this PC or reach it by Remote Desktop.", "warn"));
@@ -927,7 +948,7 @@ function heading(title, sub) {
 }
 
 function whoOf(a) { return a.ip || a.username || "-"; }
-function panelKey(a) { return a.ip || (a.rule === "PASSWORD_SPRAY" && a.username ? "user:" + a.username : null); }
+function panelKey(a) { return a.ip || (ACCT_RULES.includes(a.rule) && a.username ? "user:" + a.username : null); }
 
 function alertTable(rows, sortable) {
   const t = el("table"), thead = el("thead"), hr = el("tr");

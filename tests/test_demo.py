@@ -10,3 +10,8 @@ def test_demo_rows_make_events_and_a_brute_force():
     assert len([e for e in events if e["type"] == "SUCCESS"]) == 1
     found = find_brute_force(failures, threshold=5, window_seconds=60)
     assert "203.0.113.50" in found
+
+
+def test_demo_contains_the_after_break_in_activity():
+    types = {e["type"] for e in rows_to_events(make_sample_rows())}
+    assert {"LOG_CLEARED", "ACCOUNT_CREATED", "ADMIN_ADDED"} <= types

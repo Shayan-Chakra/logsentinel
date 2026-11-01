@@ -13,6 +13,7 @@ from logsentinel.detect import (
     find_brute_force,
     find_password_spray,
     find_success_after_failure,
+    find_system_changes,
     find_username_enumeration,
 )
 from logsentinel.elevate import relaunch_as_admin
@@ -96,7 +97,7 @@ def analyze(args):
     print(f"Failed logins found: {len(failures)}")
     print(f"Successful logins found: {len(successes)}")
 
-    brute, enum, breakins, spray, anomalies = {}, {}, [], {}, []
+    brute, enum, breakins, spray, anomalies, slow, system = {}, {}, [], {}, [], {}, []
 
     cfg = rules["brute_force"]
     if cfg["enabled"]:
@@ -138,11 +139,28 @@ def analyze(args):
             min_failures=cfg["min_failures"],
         )
 
+    cfg = rules.get("slow_brute_force", {})
+    if cfg.get("enabled"):
+        slow = find_brute_force(
+            failures,
+            threshold=cfg["failed_attempts"],
+            window_seconds=cfg["window_seconds"],
+        )
+
+    if rules.get("system_changes", {}).get("enabled"):
+        system = find_system_changes(events)
+
     alerts = []
 
     for ip, count in brute.items():
         print(f"[ALERT] {ip} failed {count} times - possible brute force!")
         alerts.append({"rule": "BRUTE_FORCE", "ip": ip, "count": count})
+
+    for ip, count in slow.items():
+        if ip in brute:
+            continue  # already reported as the faster kind of brute force
+        print(f"[ALERT] {ip} failed {count} times within a long window - slow brute force!")
+        alerts.append({"rule": "SLOW_BRUTE_FORCE", "ip": ip, "count": count})
 
     for ip, count in enum.items():
         print(f"[ALERT] {ip} tried {count} different usernames - possible username enumeration!")
@@ -165,6 +183,16 @@ def analyze(args):
             f"(normal is about {item['baseline']}) - unusual spike!"
         )
         alerts.append({"rule": "ANOMALY", "count": item["count"]})
+
+    for item in system:
+        who, count = item["user"], item["count"]
+        if item["rule"] == "LOG_CLEARED":
+            print(f"[CRITICAL] The Windows Security log was cleared by '{who}' ({count}x) - attackers do this to hide their tracks!")
+        elif item["rule"] == "ADMIN_ADDED":
+            print(f"[CRITICAL] '{who}' added someone to the Administrators group ({count}x)!")
+        else:
+            print(f"[ALERT] A new user account '{who}' was created ({count}x).")
+        alerts.append(item)
 
     if not alerts:
         print("No suspicious activity.")

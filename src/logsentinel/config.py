@@ -10,6 +10,8 @@ DEFAULT_RULES = {
     "success_after_failure": {"enabled": True, "failed_attempts": 5, "window_seconds": 300},
     "password_spray": {"enabled": True, "unique_ips": 5, "window_seconds": 300},
     "anomaly": {"enabled": True, "factor": 5, "min_failures": 20},
+    "slow_brute_force": {"enabled": True, "failed_attempts": 10, "window_seconds": 3600},
+    "system_changes": {"enabled": True},
     "allowlist": {"ips": []},
 }
 

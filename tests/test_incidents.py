@@ -30,3 +30,18 @@ def test_password_spray_becomes_its_own_incident():
     assert result[0]["rules"] == ["PASSWORD_SPRAY"]
     assert result[0]["risk_score"] == 30
     assert result[0]["severity"] == "MEDIUM"
+
+
+def test_log_cleared_and_admin_added_make_one_incident_for_the_account():
+    rows = [
+        {"rule": "LOG_CLEARED", "ip": "LOCAL", "username": None,
+         "created_at": "2026-10-04T10:00:00", "last_seen": "2026-10-04T10:00:00"},
+        {"rule": "LOG_CLEARED", "ip": None, "username": "mallory",
+         "created_at": "2026-10-04T10:00:00", "last_seen": "2026-10-04T10:00:00"},
+        {"rule": "ADMIN_ADDED", "ip": None, "username": "mallory",
+         "created_at": "2026-10-04T10:01:00", "last_seen": "2026-10-04T10:01:00"},
+    ]
+    result = [i for i in build_incidents(rows) if i["ip"] == "user:mallory"]
+    assert len(result) == 1
+    assert result[0]["risk_score"] == 100
+    assert result[0]["severity"] == "CRITICAL"

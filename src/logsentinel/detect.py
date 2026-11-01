@@ -113,3 +113,22 @@ def find_anomalies(events, factor=5, min_failures=20):
             })
 
     return anomalies
+
+
+SYSTEM_TYPES = ("LOG_CLEARED", "ACCOUNT_CREATED", "ADMIN_ADDED")
+
+
+def find_system_changes(events):
+    """Things that attackers do AFTER getting in: clear the log, add accounts, add admins.
+
+    Returns one alert per (rule, account) with how many times it happened.
+    LOG_CLEARED / ADMIN_ADDED: the account that did it.  ACCOUNT_CREATED: the new account.
+    """
+    counts = defaultdict(int)
+    for event in events:
+        if event["type"] in SYSTEM_TYPES:
+            counts[(event["type"], event["user"])] += 1
+    return [
+        {"rule": rule, "user": user, "count": count}
+        for (rule, user), count in sorted(counts.items())
+    ]

@@ -2,7 +2,7 @@
 import csv
 from datetime import datetime, timedelta
 
-FIELDS = ["Time", "EventId", "User", "Ip", "LogonType"]
+FIELDS = ["Time", "EventId", "User", "Ip", "LogonType", "Subject", "Target", "TargetSid"]
 
 
 def make_sample_rows(now=None):
@@ -10,7 +10,7 @@ def make_sample_rows(now=None):
     start = now - timedelta(minutes=5)
     rows = []
 
-    def add(seconds, event_id, user, ip, logon_type="3"):
+    def add(seconds, event_id, user, ip, logon_type="3", subject="", target="", sid=""):
         when = start + timedelta(seconds=seconds)
         rows.append({
             "Time": when.strftime("%Y-%m-%d %H:%M:%S"),
@@ -18,6 +18,9 @@ def make_sample_rows(now=None):
             "User": user,
             "Ip": ip,
             "LogonType": logon_type,
+            "Subject": subject,
+            "Target": target,
+            "TargetSid": sid,
         })
 
     # 1) brute force, then a successful login (a possible break-in)
@@ -32,6 +35,11 @@ def make_sample_rows(now=None):
     # 3) many IPs all attacking one user (password spray)
     for n in range(6):
         add(120 + n * 3, 4625, "administrator", f"192.0.2.{10 + n}")
+
+    # 4) what an intruder often does next: add an account, make someone an admin, clear the log
+    add(180, 4720, "support2", "", "", subject="contractor")
+    add(185, 4732, "Administrators", "", "", subject="contractor", target="Administrators", sid="S-1-5-32-544")
+    add(200, 1102, "", "", "", subject="contractor")
 
     return rows
 

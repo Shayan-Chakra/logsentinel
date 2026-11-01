@@ -1,12 +1,16 @@
 from logsentinel.scoring import SCORES, severity
 
 
+# Rules about an ACCOUNT (not an address). They become incidents named "user:<account>".
+ACCOUNT_RULES = ("PASSWORD_SPRAY", "LOG_CLEARED", "ACCOUNT_CREATED", "ADMIN_ADDED")
+
+
 def incident_key(row):
     """Who an alert belongs to: an IP address, or 'user:<name>' for password spraying."""
     if row["ip"]:
         return row["ip"]
-    # Password spraying hits one account from many addresses, so it has no single IP.
-    if row["rule"] == "PASSWORD_SPRAY" and row.get("username"):
+    # These rules are about one account, not one address.
+    if row["rule"] in ACCOUNT_RULES and row.get("username"):
         return "user:" + row["username"]
     return None
 
