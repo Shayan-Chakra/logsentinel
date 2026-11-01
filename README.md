@@ -2,7 +2,7 @@
 
 A small, local security log analyzer. It reads the **Windows Security log** (or SSH logs and CSV exports), spots suspicious login activity, and shows the result in a dashboard that runs only on your own PC.
 
-> Nothing is uploaded anywhere. Your logs never leave your computer.
+> Nothing is uploaded anywhere. Your logs never leave your computer.The only optional exception is the AbuseIPDB lookup, which sends public IP addresses to abuseipdb.com if you set an API key.
 
 ![Dashboard (dark theme)](docs/dashboard-dark.png)
 
@@ -98,6 +98,7 @@ Edit `rules.yaml` to change the thresholds and the allowlist. If you override a 
 - Every request needs a random secret token. The link with the token is shown in the LogSentinel window.
 - Requests with an unexpected Host header are refused.
 - LogSentinel only reads logs and reports. It never changes your firewall, accounts or settings. The "block" command in the dashboard is only copied to your clipboard for you to run yourself.
+- Text from logs (usernames, addresses) is cleaned and length-limited before it is stored or shown.
 - Alerts are stored in a local SQLite database in `%LOCALAPPDATA%\LogSentinel`.
 
 ## Limitations

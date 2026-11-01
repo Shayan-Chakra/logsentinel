@@ -1,12 +1,12 @@
 import sys
 
-from logsentinel.elevate import build_command, relaunch_as_admin
+from logsentinel.elevate import build_command, relaunch_as_admin, safe_workdir
 
 
 def test_running_from_python_uses_the_module():
     program, params = build_command(["start", "--hours", "24"], frozen=False, executable="C:\\v\\python.exe")
     assert program == "C:\\v\\python.exe"
-    assert params == "-m logsentinel.cli start --hours 24"
+    assert params == "-I -m logsentinel.cli start --hours 24"
 
 
 def test_packaged_exe_runs_itself():
@@ -23,3 +23,9 @@ def test_paths_with_spaces_are_quoted():
 def test_cannot_elevate_when_not_windows(monkeypatch):
     monkeypatch.setattr(sys, "platform", "linux")
     assert relaunch_as_admin(["start"]) is False
+
+
+def test_admin_copy_starts_in_the_programs_own_folder(tmp_path):
+    exe = tmp_path / "logsentry.exe"
+    exe.write_text("x")
+    assert safe_workdir(str(exe)) == str(tmp_path)

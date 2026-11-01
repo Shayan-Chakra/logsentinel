@@ -1,6 +1,8 @@
 import re
 from datetime import datetime
 
+from logsentinel.textsafe import clean_text
+
 TIME = r"^(?P<time>[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})"
 
 FAIL_PATTERN = re.compile(
@@ -15,7 +17,12 @@ def make_event(match, event_type):
     time = datetime.strptime(
         f"{datetime.now().year} {match['time']}", "%Y %b %d %H:%M:%S"
     )
-    return {"time": time, "user": match["user"], "ip": match["ip"], "type": event_type}
+    return {
+        "time": time,
+        "user": clean_text(match["user"]),
+        "ip": clean_text(match["ip"]),
+        "type": event_type,
+    }
 
 
 def parse_line(line):

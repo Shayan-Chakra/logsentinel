@@ -16,3 +16,8 @@ def test_successful_login_is_parsed():
 
 def test_unrelated_line_is_ignored():
     assert parse_line("this is not a login line") is None
+
+
+def test_control_characters_in_username_are_cleaned():
+    line = "Oct 03 19:20:01 server sshd[1]: Failed password for ro\x1b[2Jot from 203.0.113.10 port 1 ssh2"
+    assert "\x1b" not in parse_line(line)["user"]

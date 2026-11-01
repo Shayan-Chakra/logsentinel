@@ -13,8 +13,17 @@ def build_command(extra_args, frozen=None, executable=None):
     """
     frozen = getattr(sys, "frozen", False) if frozen is None else frozen
     executable = executable or sys.executable
-    args = list(extra_args) if frozen else ["-m", "logsentinel.cli"] + list(extra_args)
+    # -I = isolated mode: Python ignores the current folder, so a file planted there
+    # (for example a fake yaml.py) cannot be imported by the administrator copy.
+    args = list(extra_args) if frozen else ["-I", "-m", "logsentinel.cli"] + list(extra_args)
     return executable, subprocess.list2cmdline(args)
+
+
+def safe_workdir(program):
+    """Folder to start the administrator copy in: the program's own folder, never the
+    folder you happened to be in (which any normal program could have written to)."""
+    folder = os.path.dirname(os.path.abspath(program))
+    return folder if os.path.isdir(folder) else None
 
 
 def relaunch_as_admin(extra_args):
@@ -28,5 +37,5 @@ def relaunch_as_admin(extra_args):
     program, params = build_command(extra_args)
     shell_execute = ctypes.windll.shell32.ShellExecuteW
     shell_execute.restype = ctypes.c_void_p
-    result = shell_execute(None, "runas", program, params, os.getcwd(), 1)
+    result = shell_execute(None, "runas", program, params, safe_workdir(program), 1)
     return int(result or 0) > 32  # 32 or less means Windows refused or the user cancelled

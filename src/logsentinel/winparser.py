@@ -2,6 +2,8 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
+from logsentinel.textsafe import clean_text
+
 IGNORED_IPS = {"", "-", "::1", "127.0.0.1", "0.0.0.0"}
 
 
@@ -14,7 +16,7 @@ def rows_to_events(rows):
     events = []
 
     for row in rows:
-        ip = str(row.get("Ip") or "").strip()
+        ip = clean_text(str(row.get("Ip") or "").strip())
         if ip.lower().startswith("::ffff:"):  # IPv4 written in IPv6 style
             ip = ip[7:]
         if ip in IGNORED_IPS:
@@ -37,7 +39,7 @@ def rows_to_events(rows):
 
         events.append({
             "time": time,
-            "user": str(row.get("User") or "-").strip(),
+            "user": clean_text(str(row.get("User") or "-").strip()),
             "ip": ip,
             "type": kind,
         })

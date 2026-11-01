@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: logsentinel
+Version: 1.3.1
+Summary: Lightweight suspicious activity and log analyzer
+Requires-Python: >=3.9
+License-File: LICENSE
+Requires-Dist: PyYAML>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Dynamic: license-file
